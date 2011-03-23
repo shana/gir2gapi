@@ -1,0 +1,6 @@
+The gir2gapi.xslt converts gir files to the gapi format (.raw)
+
+run it with:
+
+xsltproc -o:my-api.raw gir2gapi.xslt my-api.gir
+
