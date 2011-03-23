@@ -53,6 +53,14 @@ exclude-result-prefixes="xsl gir c glib"
 		</mappings>
 	</xsl:variable>
 
+	<xsl:variable name="consttypes">
+		<types>
+			<type name="char*" />
+			<type name="gchar*" />
+			<type name="gfilename*" />
+		</types>
+	</xsl:variable>
+
 	<!-- START HERE -->
 	
 	<xsl:template match="/">
@@ -102,12 +110,17 @@ exclude-result-prefixes="xsl gir c glib"
 		</xsl:variable>
 
 		<method name="{$name}" cname="{@c:identifier}">
-
+			<xsl:variable name="return-value" select="gir:return-value/gir:type/@c:type" />
 			<xsl:variable name="rtype">
-				<xsl:choose><xsl:when test="../gir:enumeration[@name=gir:return-value/gir:type/@c:type]">
+				<xsl:choose>
+				<xsl:when test="../gir:enumeration[@name=$return-value]">
 					<xsl:text>int</xsl:text>
-				</xsl:when><xsl:otherwise>
-					<xsl:value-of select="gir:return-value/gir:type/@c:type"/>
+				</xsl:when>
+				<xsl:when test="gir:return-value[@transfer-ownership='none'] and exsl:node-set($consttypes)/types/type[@name=$return-value]">
+					<xsl:text>const-</xsl:text><xsl:value-of select="$return-value"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$return-value"/>
 				</xsl:otherwise></xsl:choose>
 			</xsl:variable>
 
@@ -161,14 +174,21 @@ exclude-result-prefixes="xsl gir c glib"
 		</xsl:variable>
 
 		<xsl:if test="not(../gir:method[@name = current()/@name])">
+			<xsl:variable name="return-value" select="gir:return-value/gir:type/@c:type" />
 			<signal name="{$name}" cname="{@name}">
-				<xsl:variable name="t" select="gir:return-value/gir:type/@c:type"/>
+				<xsl:variable name="t" select="$return-value"/>
 				<xsl:variable name="rtype">
-					<xsl:choose><xsl:when test="//*/gir:enumeration[@c:type=$t]">
+					<xsl:choose>
+					<xsl:when test="//*/gir:enumeration[@c:type=$t]">
 						<xsl:text>int</xsl:text>
-					</xsl:when><xsl:otherwise>
-						<xsl:value-of select="gir:return-value/gir:type/@c:type"/>
-					</xsl:otherwise></xsl:choose>
+					</xsl:when>
+					<xsl:when test="gir:return-value[@transfer-ownership='none'] and exsl:node-set($consttypes)/types/type[@name=$return-value]">
+						<xsl:text>const-</xsl:text><xsl:value-of select="$return-value"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="$return-value"/>
+					</xsl:otherwise>
+					</xsl:choose>
 				</xsl:variable>
 
 				<return-type type="{$rtype}" />
@@ -176,14 +196,21 @@ exclude-result-prefixes="xsl gir c glib"
 				<parameters>
 					<parameter name="{translate(../@name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')}" type="{../@c:type}*" />
 					<xsl:for-each select="gir:parameters/gir:parameter">
+						<xsl:variable name="param-value" select="gir:type/@c:type" />
 						<xsl:variable name="pname"><xsl:call-template name="validate"><xsl:with-param name="name" select="@name"/></xsl:call-template></xsl:variable>
 						<!-- stupid hack to replace enums with int because gapi is stupid and doesn't register their types -->
 						<xsl:variable name="ptype">
-							<xsl:choose><xsl:when test="../../../gir:namespace/gir:enumeration[@c:type=gir:type/@c:type]">
+							<xsl:choose>
+							<xsl:when test="../../../gir:namespace/gir:enumeration[@c:type=gir:type/@c:type]">
 								<xsl:text>int</xsl:text>
-							</xsl:when><xsl:otherwise>
-								<xsl:value-of select="gir:type/@c:type"/>
-							</xsl:otherwise></xsl:choose>
+							</xsl:when>
+							<xsl:when test="@transfer-ownership='none' and exsl:node-set($consttypes)/types/type[@name=$param-value]">
+								<xsl:text>const-</xsl:text><xsl:value-of select="$param-value"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:value-of select="$param-value"/>
+							</xsl:otherwise>
+							</xsl:choose>
 						</xsl:variable>
 						<parameter name="{$pname}" type="{$ptype}" />
 					</xsl:for-each>
