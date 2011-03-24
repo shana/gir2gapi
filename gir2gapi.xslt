@@ -39,7 +39,7 @@ xmlns:exsl="http://exslt.org/common"
 xmlns:gir="http://www.gtk.org/introspection/core/1.0"
 xmlns:c="http://www.gtk.org/introspection/c/1.0"
 xmlns:glib="http://www.gtk.org/introspection/glib/1.0"
-exclude-result-prefixes="xsl gir c glib"
+exclude-result-prefixes="xsl exsl gir c glib"
 
 >
 	<xsl:output method="xml" version="1.0" encoding="UTF-8" indent="yes"/>
@@ -106,6 +106,10 @@ exclude-result-prefixes="xsl gir c glib"
 
 		<xsl:variable name="type"><xsl:call-template name="map-type"><xsl:with-param name="type" select="@c:type"/></xsl:call-template></xsl:variable>
 		<object name="{@name}" cname="{$type}" parent="{$parent}">
+		      <method name="GetType" cname="{@glib:get-type}" shared="true">
+		        <return-type type="GType" />
+		      </method>
+
 			<xsl:apply-templates />
 		</object>
 	</xsl:template>	
