@@ -244,7 +244,7 @@ exclude-result-prefixes="xsl exsl gir c glib"
 			</xsl:call-template>
 		</xsl:variable>
 
-		<xsl:if test="not(../gir:method[@name = translate(current()/@name,'-','_')])">
+		<xsl:if test="not(../gir:method[@name = translate(current()/@name,'-','_')]) and not(../gir:virtual-method[@name = translate(current()/@name,'-','_')])">
 			<xsl:variable name="rtypemap"><xsl:call-template name="map-type"><xsl:with-param name="type" select="gir:return-value/gir:type/@c:type"/></xsl:call-template></xsl:variable>
 			<signal name="{$name}" cname="{@name}">
 				<xsl:variable name="t" select="$rtypemap"/>
@@ -299,7 +299,8 @@ exclude-result-prefixes="xsl exsl gir c glib"
 		<enum name="{@name}" cname="{@c:type}">
 			<xsl:for-each select="gir:member">
 				<xsl:sort select="@value" />
-				<xsl:variable name="name"><xsl:call-template name="validate"><xsl:with-param name="name" select="@name"/></xsl:call-template></xsl:variable>
+				<xsl:variable name="ename"><xsl:call-template name="capitalize"><xsl:with-param name="string" select="@name"/></xsl:call-template></xsl:variable>
+				<xsl:variable name="name"><xsl:call-template name="validate"><xsl:with-param name="name" select="$ename"/></xsl:call-template></xsl:variable>
 				<member cname="{@c:identifier}" name="{$name}" />
 			</xsl:for-each>
 		</enum>
