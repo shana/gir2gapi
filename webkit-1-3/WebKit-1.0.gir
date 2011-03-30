@@ -22073,7 +22073,7 @@ The default bindings for this signal is Ctrl-a.</doc>
           </parameter>
           <parameter name="affinity" transfer-ownership="none">
             <doc xml:whitespace="preserve">the #WebKitSelectionAffinity</doc>
-            <type name="SelectionAffinity" c:type="WebKitSelectionAffinity*"/>
+            <type name="SelectionAffinity" c:type="WebKitSelectionAffinity"/>
           </parameter>
           <parameter name="flag" transfer-ownership="none">
             <doc xml:whitespace="preserve">TODO: document</doc>
@@ -22118,7 +22118,7 @@ The default bindings for this signal is Ctrl-a.</doc>
           </parameter>
           <parameter name="action" transfer-ownership="none">
             <doc xml:whitespace="preserve">the #WebKitInsertAction</doc>
-            <type name="InsertAction" c:type="WebKitInsertAction*"/>
+            <type name="InsertAction" c:type="WebKitInsertAction"/>
           </parameter>
         </parameters>
       </glib:signal>
@@ -22137,7 +22137,7 @@ The default bindings for this signal is Ctrl-a.</doc>
           </parameter>
           <parameter name="action" transfer-ownership="none">
             <doc xml:whitespace="preserve">the #WebKitInsertAction</doc>
-            <type name="InsertAction" c:type="WebKitInsertAction*"/>
+            <type name="InsertAction" c:type="WebKitInsertAction"/>
           </parameter>
         </parameters>
       </glib:signal>
