@@ -115,6 +115,15 @@ exclude-result-prefixes="xsl exsl gir c glib"
 	</xsl:template>	
 
 
+	<xsl:template match="gir:record">
+		<xsl:if test="not(@glib:is-gtype-struct-for)">
+			<xsl:variable name="type"><xsl:call-template name="map-type"><xsl:with-param name="type" select="@c:type"/></xsl:call-template></xsl:variable>
+			<struct name="{@name}" cname="{$type}">
+				<xsl:apply-templates />
+			</struct>
+		</xsl:if>
+	</xsl:template>	
+
 	<xsl:template match="gir:method">
 		<xsl:variable name="name">
 			<xsl:call-template name="capitalize">
@@ -351,11 +360,72 @@ exclude-result-prefixes="xsl exsl gir c glib"
 		<enum name="{@name}" cname="{@c:type}">
 			<xsl:for-each select="gir:member">
 				<xsl:sort select="@value" />
-				<xsl:variable name="ename"><xsl:call-template name="capitalize"><xsl:with-param name="string" select="@name"/></xsl:call-template></xsl:variable>
+
+				<xsl:variable name="ename">
+					<xsl:choose><xsl:when test="@name = @value">
+						<xsl:call-template name="capitalize"><xsl:with-param name="string" select="@c:identifier"/></xsl:call-template>
+					</xsl:when><xsl:otherwise>
+						<xsl:call-template name="capitalize"><xsl:with-param name="string" select="@name"/></xsl:call-template>
+					</xsl:otherwise></xsl:choose>
+				</xsl:variable>
 				<xsl:variable name="name"><xsl:call-template name="validate"><xsl:with-param name="name" select="$ename"/></xsl:call-template></xsl:variable>
 				<member cname="{@c:identifier}" name="{$name}" />
 			</xsl:for-each>
 		</enum>
+	</xsl:template>	
+
+	<xsl:template match="gir:field">
+		<xsl:if test="not(../gir:property[@name = translate(current()/@name,'_','-')]) and not(../gir:method[@name = current()/@name])">
+			<xsl:variable name="name"><xsl:call-template name="capitalize"><xsl:with-param name="string" select="@name"/></xsl:call-template></xsl:variable>
+			<xsl:variable name="typemap"><xsl:call-template name="map-type"><xsl:with-param name="type" select="gir:type/@c:type"/></xsl:call-template></xsl:variable>
+			<xsl:variable name="type">
+				<xsl:choose><xsl:when test="//*/gir:namespace/gir:enumeration[@c:type=gir:type/@c:type]">
+					<xsl:text>int</xsl:text>
+				</xsl:when><xsl:when test="@transfer-ownership='none' and exsl:node-set($consttypes)/types/type[@name=$typemap]">
+					<xsl:text>const-</xsl:text><xsl:value-of select="$typemap"/>
+				</xsl:when><xsl:otherwise>
+					<xsl:value-of select="$typemap"/>
+				</xsl:otherwise></xsl:choose>
+			</xsl:variable>
+
+			<field name="{$name}" cname="{@name}" type="{$type}" />
+		</xsl:if>
+	</xsl:template>	
+
+	<xsl:template match="gir:property">
+		<xsl:if test="not(../gir:method[@name = translate(current()/@name,'-','_')]) and not(../gir:virtual-method[@name = translate(current()/@name,'-','_')])">
+
+			<xsl:variable name="name"><xsl:call-template name="capitalize"><xsl:with-param name="string" select="@name"/><xsl:with-param name="sep">-</xsl:with-param></xsl:call-template></xsl:variable>
+			<xsl:variable name="typemap"><xsl:call-template name="map-type"><xsl:with-param name="type" select="gir:type/@c:type"/></xsl:call-template></xsl:variable>
+			<xsl:variable name="type">
+				<xsl:choose>
+				<xsl:when test="//*/gir:namespace/gir:enumeration[@c:type=gir:type/@c:type]">
+					<xsl:text>int</xsl:text>
+				</xsl:when>
+				<xsl:when test="../../gir:class[@name=current()/gir:type/@name]">
+					<xsl:value-of select="../../gir:class[@name=current()/gir:type/@name]/@c:type"/><xsl:text>*</xsl:text>
+				</xsl:when>
+				<xsl:when test="../../gir:record[@name=current()/gir:type/@name]">
+					<xsl:value-of select="../../gir:record[@name=current()/gir:type/@name]/@c:type"/><xsl:text>*</xsl:text>
+				</xsl:when>
+				<xsl:when test="@transfer-ownership='none' and exsl:node-set($consttypes)/types/type[@name=$typemap]">
+					<xsl:text>const-</xsl:text><xsl:value-of select="$typemap"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$typemap"/>
+				</xsl:otherwise>
+				</xsl:choose>
+			</xsl:variable>
+			<xsl:variable name="writable">
+				<xsl:choose><xsl:when test="@writable and @writable=1">
+					<xsl:text>true</xsl:text>
+				</xsl:when><xsl:otherwise>
+					<xsl:text>false</xsl:text>
+				</xsl:otherwise></xsl:choose>
+			</xsl:variable>
+
+			<property name="{$name}" cname="{@name}" type="{$type}" readable="true" writable="{$writable}"/>
+		</xsl:if>
 	</xsl:template>	
 
 	<xsl:template match="gir:*">
